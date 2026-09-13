@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000;" />
+<title>Setu Sevak — Secure Citizen Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #16264A;
+    --navy-deep: #0E1930;
+    --paper: #F3EFE3;
+    --paper-card: #FBF9F3;
+    --marigold: #E08A2C;
+    --marigold-deep: #B96A16;
+    --ink: #1B2438;
+    --ink-soft: #5B6478;
+    --line: #D8D2C0;
+    --green: #3F7D58;
+    --red: #C53030;
+    --radius: 6px;
+    --font-scale: 1rem;
+    font-size: var(--font-scale);
+  }
+
+  /* HIGH CONTRAST MODE */
+  body.high-contrast {
+    --navy: #000000;
+    --navy-deep: #000000;
+    --paper: #FFFFFF;
+    --paper-card: #FFFFFF;
+    --marigold: #FFFF00;
+    --marigold-deep: #D4D400;
+    --ink: #000000;
+    --ink-soft: #111111;
+    --line: #000000;
+    --green: #008000;
+    --red: #FF0000;
+  }
+  body.high-contrast .btn-auth,
+  body.high-contrast .btn-select {
+    border: 2px solid #000;
+    background: #000 !important;
+    color: #FFF !important;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Poppins', 'IBM Plex Sans', sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'IBM Plex Serif', serif;
+    color: var(--navy-deep);
+    margin-top: 0;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 24px; }
+
+  /* HIGH-END EMBEDDED INTRO ANIMATION */
+  #splash-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: radial-gradient(circle at center, #1B2D54 0%, var(--navy-deep) 100%);
+    color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 9999;
+    overflow: hidden;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+  }
+  #splash-screen.fade-out { 
+    opacity: 0; 
+    transform: scale(1.08); 
+    visibility: hidden; 
+  }
+  
+  .splash-ambient-glow {
+    position: absolute;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(224, 138, 44, 0.25) 0%, rgba(224, 138, 44, 0) 70%);
+    border-radius: 50%;
+    animation: pulseAmbient 3s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  .splash-seal {
+    position: relative;
+    width: 90px; height: 90px;
+    border: 3px solid var(--marigold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Serif', serif; font-size: 42px; font-weight: 700; color: var(--marigold);
+    margin-bottom: 24px;
+    background: rgba(22, 38, 74, 0.6);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 0 15px rgba(224, 138, 44, 0.2);
+    animation: sealEntrance 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, floatSeal 4s ease-in-out infinite 1s;
+    overflow: hidden;
+  }
+
+  .splash-seal::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(60deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
+    transform: rotate(30deg) translateX(-100%);
+    animation: sweepShine 3s infinite 1.2s;
+  }
+
+  .splash-title {
+    color: #fff;
+    font-size: 32px;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    opacity: 0;
+    animation: textFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.4s;
+  }
+
+  .splash-subtitle {
+    color: #C9CDDA;
+    font-size: 14px;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: textFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.6s;
+  }
+
+  .splash-loader {
+    width: 240px; height: 5px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    opacity: 0;
+    animation: textFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.8s;
+  }
+
+  .splash-loader-bar {
+    width: 0%; height: 100%;
+    background: linear-gradient(90deg, var(--marigold) 0%, #F5B05E 100%);
+    box-shadow: 0 0 10px rgba(224, 138, 44, 0.8);
+    animation: fillProgress 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.8s;
+  }
+
+  @keyframes sealEntrance {
+    0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  @keyframes floatSeal {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes sweepShine {
+    0% { transform: rotate(30deg) translateX(-100%); }
+    100% { transform: rotate(30deg) translateX(100%); }
+  }
+  @keyframes pulseAmbient {
+    0% { transform: scale(0.9); opacity: 0.15; }
+    100% { transform: scale(1.25); opacity: 0.35; }
+  }
+  @keyframes textFadeUp {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fillProgress {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+
+  /* ACCESSIBILITY TOOLBAR */
+  .a11y-toolbar {
+    background: #0A1224;
+    color: #fff;
+    padding: 6px 24px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+  }
+  .a11y-btn {
+    background: transparent;
+    border: 1px solid var(--marigold);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .a11y-btn:hover, .a11y-btn:focus { background: var(--marigold); color: var(--navy-deep); }
+
+  /* HEADER */
+  #main-app { opacity: 0; transition: opacity 0.6s ease-in; }
+  #main-app.visible { opacity: 1; }
+  header.nav { background: var(--navy-deep); color: #fff; border-bottom: 3px solid var(--marigold); padding: 16px 24px; }
+  .nav-inner { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .brand { font-family: 'IBM Plex Serif', serif; font-size: 22px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
+  .brand small { display: block; font-family: 'Poppins', sans-serif; font-size: 11px; color: #C9CDDA; font-weight: 400; }
+
+  /* AUTHENTICATION TABS & CARD */
+  .auth-card {
+    background: var(--paper-card);
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px;
+    max-width: 450px;
+    margin: 40px auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  }
+
+  .auth-toggle-bar {
+    display: flex;
+    border-bottom: 2px solid var(--line);
+    margin-bottom: 24px;
+  }
+  .auth-toggle-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 10px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+  }
+  .auth-toggle-btn.active {
+    color: var(--navy-deep);
+    border-bottom-color: var(--marigold);
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-size: 14px;
+    margin-top: 4px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+  }
+  .input-field:focus { outline: 2px solid var(--navy-deep); }
+
+  .btn-auth {
+    background: var(--navy-deep);
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    width: 100%;
+  }
+  .btn-auth:hover, .btn-auth:focus { background: var(--marigold); color: var(--navy-deep); outline: 2px solid var(--navy); }
+
+  .alert-box {
+    padding: 10px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .alert-error { background: #FED7D7; color: var(--red); border: 1px solid #FEB2B2; }
+  .alert-success { background: #C6F6D5; color: var(--green); border: 1px solid #9AE6B4; }
+
+  /* MENU BAR */
+  .menu-bar {
+    background: #101B38;
+    border-bottom: 1px solid #2C3760;
+    padding: 0 24px;
+    display: none;
+    gap: 8px;
+    overflow-x: auto;
+  }
+  .menu-bar.visible { display: flex; }
+  .menu-tab {
+    background: transparent;
+    border: none;
+    color: #C9CDDA;
+    padding: 14px 20px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.4s ease, transform 0.4s ease, color 0.2s;
+  }
+  .menu-tab.appear { opacity: 1; transform: translateY(0); }
+  .menu-tab:hover, .menu-tab:focus { color: #fff; outline: none; }
+  .menu-tab.active { color: #fff; border-bottom-color: var(--marigold); background: #16264A; }
+
+  /* INSTRUCTION GUIDE */
+  .book-container {
+    background: var(--paper-card);
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    padding: 32px;
+    margin-top: 20px;
+  }
+  .voice-bar {
+    background: var(--navy);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .voice-btn { background: var(--marigold); color: var(--navy-deep); border: none; padding: 6px 14px; font-weight: 600; font-size: 12px; cursor: pointer; border-radius: var(--radius); }
+  .voice-btn.stop { background: var(--marigold-deep); color: #fff; }
+
+  .btn-okay {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 14px 28px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    display: block;
+    margin: 28px auto 0;
+    box-shadow: 0 4px 12px rgba(63, 125, 88, 0.3);
+  }
+  .btn-okay:hover, .btn-okay:focus { background: #326446; outline: 2px solid var(--navy-deep); }
+
+  /* GRIDS & CARDS */
+  .content-view { display: none; padding: 20px 0; }
+  .content-view.active { display: block; }
+  
+  .section-intro { margin-bottom: 24px; }
+  .section-intro p { color: var(--ink-soft); margin-top: 4px; }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: var(--paper-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .card:hover, .card:focus-within {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  .card-icon { font-size: 32px; margin-bottom: 12px; }
+  .card h3 { font-size: 18px; margin-bottom: 8px; color: var(--navy-deep); }
+  .card p { font-size: 13.5px; color: var(--ink-soft); margin-bottom: 20px; flex-grow: 1; }
+  
+  .btn-select {
+    background: var(--navy-deep);
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+  }
+  .btn-select:hover, .btn-select:focus { background: var(--marigold); color: var(--navy-deep); }
+
+  .doc-badge { background: #E2E8F0; color: var(--navy-deep); font-weight: 600; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+  .status-verified { color: var(--green); font-size: 12px; font-weight: 700; }
+  .doc-number-masked { font-family: monospace; font-size: 15px; letter-spacing: 2px; color: var(--ink-soft); margin: 12px 0; }
+  .btn-autofill { background: var(--marigold); color: var(--navy-deep); border: none; padding: 8px 12px; font-weight: 600; font-size: 12px; border-radius: var(--radius); cursor: pointer; width: 100%; }
+
+  /* WIZARD & DYNAMIC UPLOADER */
+  .wizard-card {
+    background: var(--paper-card);
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-top: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .wizard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+  .progress-tracker {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .progress-step {
+    flex: 1;
+    height: 6px;
+    background: var(--line);
+    border-radius: 3px;
+  }
+  .progress-step.active {
+    background: var(--marigold);
+  }
+  .wizard-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 28px;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+  }
+  .btn-secondary {
+    background: var(--line);
+    color: var(--ink);
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .btn-secondary:hover, .btn-secondary:focus { background: #C5BFAD; }
+
+  .doc-upload-item {
+    background: #EAE6D8;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--navy);
+    padding: 16px;
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+  }
+  .doc-upload-item h4 {
+    margin: 0 0 6px 0;
+    font-size: 14px;
+    color: var(--navy-deep);
+  }
+  .doc-upload-item .req-tag {
+    color: var(--red);
+    font-weight: bold;
+    font-size: 12px;
+    margin-left: 4px;
+  }
+
+  .upload-progress-container {
+    width: 100%;
+    height: 6px;
+    background: #D8D2C0;
+    border-radius: 3px;
+    margin-top: 6px;
+    display: none;
+    overflow: hidden;
+  }
+  .upload-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--green);
+    transition: width 0.3s ease;
+  }
+  .preview-thumb {
+    max-width: 120px;
+    max-height: 80px;
+    margin-top: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    display: none;
+  }
+
+  footer { text-align: center; padding: 30px; border-top: 1px solid var(--line); margin-top: 40px; color: var(--ink-soft); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ENHANCED INTRO ANIMATION SCREEN -->
+<div id="splash-screen" role="dialog" aria-label="Loading Portal">
+  <div class="splash-ambient-glow" aria-hidden="true"></div>
+  <div class="splash-seal" aria-hidden="true">🏛️</div>
+  <h1 class="splash-title">Setu Sevak</h1>
+  <p class="splash-subtitle">Loading Security Protocols & Portal...</p>
+  <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+</div>
+
+<!-- ACCESSIBILITY TOOLBAR -->
+<div class="a11y-toolbar">
+  <span>Accessibility Options:</span>
+  <button class="a11y-btn" onclick="toggleContrast()" aria-label="Toggle High Contrast Mode">👁️ High Contrast</button>
+  <button class="a11y-btn" onclick="adjustFontSize(1)" aria-label="Increase Font Size">A+</button>
+  <button class="a11y-btn" onclick="adjustFontSize(-1)" aria-label="Decrease Font Size">A-</button>
+</div>
+
+<div id="main-app">
+
+  <header class="nav" role="banner">
+    <div class="nav-inner">
+      <div class="brand">
+        <span>🏛️ Setu Sevak</span>
+        <small>Unified Citizen Services Portal</small>
+      </div>
+      <select id="languageSelect" onchange="changeLanguage()" aria-label="Select Language" style="background:var(--navy); color:#fff; border:1px solid var(--marigold); padding:6px 12px; border-radius:var(--radius); cursor:pointer; font-family:inherit;">
+        <option value="en" selected>🌐 English</option>
+        <option value="hi">🌐 हिंदी (Hindi)</option>
+        <option value="bn">🌐 বাংলা (Bengali)</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- SEQUENTIAL MENU BAR -->
+  <nav class="menu-bar" id="menuBar" role="navigation" aria-label="Primary Services Navigation">
+    <button class="menu-tab" id="tab-essential" onclick="switchTab('essential', this)">1. Essential Services (ज़रूरी सेवाएं)</button>
+    <button class="menu-tab" id="tab-schemes" onclick="switchTab('schemes', this)">2. Welfare Schemes (कल्याणकारी योजनाएं)</button>
+    <button class="menu-tab" id="tab-vault" onclick="switchTab('vault', this)">3. My Document Vault (दस्तावेज़ लॉक)</button>
+    <button class="menu-tab" id="tab-certificates" onclick="switchTab('certificates', this)">4. Certificates (प्रमाणपत्र)</button>
+    <button class="menu-tab" id="tab-eligibility" onclick="switchTab('eligibility', this)">5. Scheme Eligibility Checker (पात्रता जांच)</button>
+  </nav>
+
+  <main class="wrap">
+
+    <div id="ariaStatus" class="sr-only" aria-live="polite" style="position:absolute; left:-9999px;"></div>
+
+    <!-- SECURITY AUTHENTICATION SCREEN WITH LOGIN & SIGNUP -->
+    <section id="view-auth" class="content-view active" aria-labelledby="authHeading">
+      <div class="auth-card">
+        <div class="auth-toggle-bar" id="authToggleBar">
+          <button class="auth-toggle-btn active" id="btnTabLogin" onclick="switchAuthTab('login')">Log In</button>
+          <button class="auth-toggle-btn" id="btnTabSignup" onclick="switchAuthTab('signup')">Sign Up</button>
+        </div>
+
+        <div id="authAlert" class="alert-box" role="alert"></div>
+
+        <!-- LOGIN FORM -->
+        <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
+          <label for="loginMobile" style="font-size:12px; font-weight:600;">Registered Mobile Number</label>
+          <input type="tel" id="loginMobile" class="input-field" placeholder="Enter your 10-digit mobile number" required />
+
+          <label for="loginPasskey" style="font-size:12px; font-weight:600;">Security PIN / Passkey</label>
+          <input type="password" id="loginPasskey" class="input-field" placeholder="Enter your PIN" required />
+
+          <button type="submit" class="btn-auth">Log In to Portal ➔</button>
+
+          <button type="button" id="btnFingerprintLogin" class="btn-secondary" style="width:100%; margin-top:12px; display:none;" onclick="handleFingerprintLogin()">
+            👆 Log In with Fingerprint
+          </button>
+
+          <button type="button" onclick="showForgotPin()" style="background:none; border:none; color:var(--navy-deep); font-size:12px; font-weight:600; text-decoration:underline; cursor:pointer; margin-top:14px; display:block; width:100%; text-align:center;">
+            Forgot Security PIN?
+          </button>
+        </form>
+
+        <!-- SIGNUP FORM -->
+        <form id="signupForm" onsubmit="event.preventDefault(); handleSignup();" style="display:none;">
+          <label for="signupName" style="font-size:12px; font-weight:600;">Full Legal Name</label>
+          <input type="text" id="signupName" class="input-field" placeholder="Enter your full name" required />
+
+          <label for="signupMobile" style="font-size:12px; font-weight:600;">Mobile Number</label>
+          <input type="tel" id="signupMobile" class="input-field" placeholder="10-digit mobile number" required />
+
+          <label for="signupPasskey" style="font-size:12px; font-weight:600;">Create Security PIN</label>
+          <input type="password" id="signupPasskey" class="input-field" placeholder="Set 4 to 8 digit PIN" required />
+
+          <label for="signupSecurityQuestion" style="font-size:12px; font-weight:600;">Security Question (for PIN recovery)</label>
+          <select id="signupSecurityQuestion" class="input-field" required>
+            <option value="">Select a security question</option>
+            <option>What is your mother's maiden name?</option>
+            <option>What was the name of your first school?</option>
+            <option>What is your favorite childhood nickname?</option>
+            <option>In which city were you born?</option>
+            <option>What was your first pet's name?</option>
+          </select>
+
+          <label for="signupSecurityAnswer" style="font-size:12px; font-weight:600;">Your Answer</label>
+          <input type="text" id="signupSecurityAnswer" class="input-field" placeholder="Answer to the question above" required />
+
+          <label style="font-size:12px; font-weight:600; display:flex; align-items:flex-start; gap:8px; cursor:pointer; margin:4px 0 16px;">
+            <input type="checkbox" id="signupEnableFingerprint" style="margin-top:2px;" />
+            <span>Enable fingerprint / Face ID login on this device (optional — needs a fingerprint sensor and this page served over localhost or https)</span>
+          </label>
+
+          <button type="submit" class="btn-auth">Create Account & Proceed ➔</button>
+        </form>
+
+        <!-- FORGOT PIN RECOVERY PANEL -->
+        <div id="forgotPinPanel" style="display:none;">
+          <h3 style="font-size:16px; margin-bottom:4px;">Reset Your Security PIN</h3>
+          <p style="font-size:12.5px; color:var(--ink-soft); margin-bottom:16px;">Answer your security question to set a new PIN.</p>
+
+          <div id="forgotPinStep1">
+            <label for="forgotMobile" style="font-size:12px; font-weight:600;">Registered Mobile Number</label>
+            <input type="tel" id="forgotMobile" class="input-field" placeholder="Enter your 10-digit mobile number" />
+            <button type="button" class="btn-auth" onclick="fetchSecurityQuestion()">Continue ➔</button>
+          </div>
+
+          <div id="forgotPinStep2" style="display:none;">
+            <label style="font-size:12px; font-weight:600;">Security Question</label>
+            <p id="forgotQuestionText" style="font-size:14px; font-weight:600; color:var(--navy-deep); margin:4px 0 12px;"></p>
+
+            <label for="forgotAnswer" style="font-size:12px; font-weight:600;">Your Answer</label>
+            <input type="text" id="forgotAnswer" class="input-field" placeholder="Enter your answer" />
+
+            <label for="forgotNewPin" style="font-size:12px; font-weight:600;">New Security PIN</label>
+            <input type="password" id="forgotNewPin" class="input-field" placeholder="Set a new 4 to 8 digit PIN" />
+
+            <button type="button" class="btn-auth" onclick="submitPinReset()">Reset PIN & Log In ➔</button>
+          </div>
+
+          <button type="button" onclick="hideForgotPin()" style="background:none; border:none; color:var(--ink-soft); font-size:12px; text-decoration:underline; cursor:pointer; margin-top:14px; display:block; width:100%; text-align:center;">
+            ← Back to Login
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- READBOOK INSTRUCTION GUIDE PAGE -->
+    <section id="view-instructions" class="content-view" aria-labelledby="guideTitle">
+      <div class="voice-bar">
+        <span id="voiceStatus">🔊 Audio Voice Reader Ready</span>
+        <div>
+          <button class="voice-btn" onclick="readInstructions()">Listen to Guide</button>
+          <button class="voice-btn stop" onclick="stopAudio()">Stop</button>
+        </div>
+      </div>
+
+      <div class="book-container">
+        <h2 id="guideTitle">User Instruction Guide (उपयोगकर्ता निर्देश)</h2>
+        <div id="guideBody">
+          <p>Welcome to <strong>Setu Sevak</strong>! Please review the options setup below before entering the portal:</p>
+          <ul>
+            <li><strong>Essential Services:</strong> Quick access to Ration Cards, Voter Identification, and Mobile Updates.</li>
+            <li><strong>Welfare Schemes:</strong> PM-KISAN, Housing Subsidies, Pension Applications, and Student Scholarships.</li>
+            <li><strong>Document Vault:</strong> Store identity certificates safely to auto-fill future scheme applications.</li>
+            <li><strong>Certificates:</strong> Apply for Income, Caste, and Domicile Certificates with real-time tracking.</li>
+          </ul>
+        </div>
+
+        <button class="btn-okay" onclick="confirmInstructions()">OK, I Understand → Reveal All Options</button>
+      </div>
+    </section>
+
+    <!-- Category 1: Essential Services -->
+    <section id="view-essential" class="content-view">
+      <div class="section-intro">
+        <h2>Essential Public Services (ज़रूरी सेवाएं)</h2>
+        <p>Select a direct service to begin your online application.</p>
+      </div>
+      <div class="services-grid">
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">🍚</div>
+          <h3>Ration Card (राशन कार्ड)</h3>
+          <p>Apply for a new card, add/remove family members, or change ration shop location.</p>
+          <button class="btn-select" onclick="launchWizard('Ration Card Application', 'ration')">Start Application ➔</button>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">🆔</div>
+          <h3>Identity Updates (पहचान अपडेट)</h3>
+          <p>Update address, change mobile number, or update photo details across national portals.</p>
+          <button class="btn-select" onclick="launchWizard('Identity Update Request', 'identity')">Start Application ➔</button>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">🗳️</div>
+          <h3>Voter ID Services (मतदाता पहचान)</h3>
+          <p>Register as new voter, request PVC voter card print, or correct constituency details.</p>
+          <button class="btn-select" onclick="launchWizard('Voter ID Registration', 'voter')">Start Application ➔</button>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">⚡</div>
+          <h3>Utility Connections (बिजली/पानी)</h3>
+          <p>Apply for new domestic electricity meters, water supply connections, or LPG gas subsidy.</p>
+          <button class="btn-select" onclick="launchWizard('Utility Connection Request', 'utility')">Start Application ➔</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category 2: Welfare Schemes -->
+    <section id="view-schemes" class="content-view">
+      <div class="section-intro">
+        <h2>Welfare Schemes & Subsidies (कल्याणकारी योजनाएं)</h2>
+        <p>Discover government financial support programs based on your eligibility.</p>
+      </div>
+      <div class="services-grid">
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">🌾</div>
+          <h3>Farmer Welfare (किसान कल्याण)</h3>
+          <p>PM-KISAN installment status, crop insurance enrollment, and agricultural equipment subsidies.</p>
+          <button class="btn-select" onclick="launchWizard('PM-KISAN Farmer Welfare', 'farmer')">Evaluate Eligibility ➔</button>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">🏠</div>
+          <h3>Housing Aid (आवास योजना)</h3>
+          <p>PM Awas Yojana subsidies for rural and urban low-income housing construction.</p>
+          <button class="btn-select" onclick="launchWizard('Housing Subsidy Application', 'housing')">Evaluate Eligibility ➔</button>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">👴</div>
+          <h3>Pension Schemes (पेंशन योजनाएं)</h3>
+          <p>Old age pension, disability allowances, and widow support program enrollments.</p>
+          <button class="btn-select" onclick="launchWizard('National Pension Benefit', 'pension')">Evaluate Eligibility ➔</button>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">🎓</div>
+          <h3>Student Scholarships (छात्रवृत्ति)</h3>
+          <p>Pre-matric & post-matric scholarships for higher education and vocational training.</p>
+          <button class="btn-select" onclick="launchWizard('Scholarship Application', 'scholarship')">Evaluate Eligibility ➔</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category 3: Document Vault -->
+    <section id="view-vault" class="content-view">
+      <div class="section-intro">
+        <h2>📁 My Document Vault (सुरक्षित दस्तावेज़ लॉक)</h2>
+        <p>Save document numbers & files once to auto-fill future scheme forms safely.</p>
+      </div>
+      <div class="services-grid">
+        <div class="card">
+          <div class="doc-badge">Identity Proof</div>
+          <span class="status-verified">✓ Active Session</span>
+          <h3>Identity Certificate</h3>
+          <p class="doc-number-masked" id="vaultMaskedId">•••• •••• ----</p>
+          <button class="btn-autofill" id="btnAutofillId" onclick="autoFillVault('Identity Certificate', currentUser ? currentUser.mobile : 'ID-SESSION', 'identity')">⚡ Auto-Fill Saved ID</button>
+        </div>
+        <div class="card">
+          <div class="doc-badge">Income Verification</div>
+          <span class="status-verified">✓ Active Session</span>
+          <h3>Income Certificate</h3>
+          <p class="doc-number-masked" id="vaultMaskedIncome">INC-2026-----</p>
+          <button class="btn-autofill" id="btnAutofillIncome" onclick="autoFillVault('Income Certificate', 'INC-SESSION', 'income')">⚡ Auto-Fill Saved Income</button>
+        </div>
+        <div class="card" style="border:2px dashed var(--line); justify-content:center; align-items:center; text-align:center;">
+          <div class="card-icon" aria-hidden="true">➕</div>
+          <h3>Add New Document</h3>
+          <p>Save new certificate number or PDF for fast form filling.</p>
+          <button class="btn-select" onclick="launchWizard('Document Vault Upload', 'vault')">+ Add Document</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category 4: Certificates -->
+    <section id="view-certificates" class="content-view">
+      <div class="section-intro">
+        <h2>Official Certificates (प्रमाणपत्र)</h2>
+        <p>Apply for revenue and state certificates with legal digital signatures.</p>
+      </div>
+      <div class="services-grid">
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">📜</div>
+          <h3>Income Certificate (आय प्रमाण पत्र)</h3>
+          <p>Required for scholarship applications, fee concessions, and economic scheme waivers.</p>
+          <button class="btn-select" onclick="launchWizard('Income Certificate Application', 'income')">Apply Now ➔</button>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">🏛️</div>
+          <h3>Caste Certificate (जाति प्रमाण पत्र)</h3>
+          <p>Official SC/ST/OBC certification for reservation and quota benefits.</p>
+          <button class="btn-select" onclick="launchWizard('Caste Certificate Application', 'caste')">Apply Now ➔</button>
+        </div>
+        <div class="card">
+          <div class="card-icon" aria-hidden="true">🏡</div>
+          <h3>Domicile Certificate (निवासी प्रमाण पत्र)</h3>
+          <p>Proof of residence for local employment, education seats, and state aid.</p>
+          <button class="btn-select" onclick="launchWizard('Domicile Certificate Application', 'domicile')">Apply Now ➔</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category 5: Smart Scheme Eligibility Checker -->
+    <section id="view-eligibility" class="content-view" aria-labelledby="eligibilityHeading">
+      <div class="section-intro">
+        <h2 id="eligibilityHeading">🔍 Smart Scheme Eligibility Checker (पात्रता जांच)</h2>
+        <p>Enter a few details below and we'll automatically match you against available schemes.</p>
+      </div>
+
+      <div class="wizard-card" style="max-width:600px; margin:0 auto 24px;">
+        <div id="eligAlert" class="alert-box" role="alert"></div>
+
+        <label for="eligState" style="font-size:13px; font-weight:600;">State / Union Territory</label>
+        <select id="eligState" class="input-field">
+          <option value="">Select your state</option>
+          <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option>
+          <option>Bihar</option><option>Chhattisgarh</option><option>Goa</option><option>Gujarat</option>
+          <option>Haryana</option><option>Himachal Pradesh</option><option>Jharkhand</option>
+          <option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option>
+          <option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option>
+          <option>Nagaland</option><option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
+          <option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option>
+          <option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option>
+          <option>Delhi (NCT)</option><option>Jammu & Kashmir</option><option>Ladakh</option>
+          <option>Puducherry</option><option>Chandigarh</option><option>Andaman & Nicobar Islands</option>
+          <option>Dadra, Nagar Haveli & Daman and Diu</option><option>Lakshadweep</option>
+        </select>
+
+        <label for="eligAge" style="font-size:13px; font-weight:600;">Age</label>
+        <input type="number" id="eligAge" class="input-field" min="0" max="120" placeholder="Enter your age" />
+
+        <label for="eligIncome" style="font-size:13px; font-weight:600;">Annual Family Income (₹)</label>
+        <input type="number" id="eligIncome" class="input-field" min="0" placeholder="e.g. 150000" />
+
+        <label for="eligCategory" style="font-size:13px; font-weight:600;">Category</label>
+        <select id="eligCategory" class="input-field">
+          <option value="general">General</option>
+          <option value="obc">OBC</option>
+          <option value="sc">SC</option>
+          <option value="st">ST</option>
+        </select>
+
+        <label for="eligLand" style="font-size:13px; font-weight:600;">Do you own agricultural land?</label>
+        <select id="eligLand" class="input-field" onchange="toggleLandAcres()">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+        </select>
+
+        <div id="landAcresWrap" style="display:none;">
+          <label for="eligLandAcres" style="font-size:13px; font-weight:600;">Land Owned (in acres)</label>
+          <input type="number" id="eligLandAcres" class="input-field" min="0" step="0.1" placeholder="e.g. 2.5" />
+        </div>
+
+        <label for="eligOccupation" style="font-size:13px; font-weight:600;">Occupation / Status</label>
+        <select id="eligOccupation" class="input-field">
+          <option value="farmer">Farmer</option>
+          <option value="student">Student</option>
+          <option value="salaried">Salaried Employee</option>
+          <option value="self_employed">Self-Employed / Business</option>
+          <option value="unemployed">Unemployed</option>
+          <option value="senior">Senior Citizen (Not Working)</option>
+          <option value="other">Other</option>
+        </select>
+
+        <label style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:8px;">
+          <input type="checkbox" id="eligWidow" /> Widowed
+        </label>
+        <label style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:8px; margin-bottom:16px;">
+          <input type="checkbox" id="eligDisabled" /> Person with Disability
+        </label>
+
+        <button class="btn-auth" onclick="checkEligibility()">🔍 Check My Eligible Schemes</button>
+      </div>
+
+      <div id="eligResultsWrap" style="display:none;">
+        <div class="section-intro">
+          <h3>✅ Schemes You May Be Eligible For</h3>
+          <p style="font-size:13px;">This is an indicative screening based on the details entered — it is not an official determination. Please confirm final eligibility on the respective government scheme portal or with your local office before applying.</p>
+        </div>
+        <div class="services-grid" id="eligResultsGrid"></div>
+      </div>
+
+      <div id="eligNoResults" style="display:none; text-align:center; padding:24px; color:var(--ink-soft);">
+        <p>No matching schemes found based on the details provided. Try adjusting income, age, or land details, or browse all services in the Essential Services and Welfare Schemes tabs.</p>
+      </div>
+    </section>
+
+    <!-- DYNAMIC INTERACTIVE SERVICE WIZARD -->
+    <section id="view-wizard" class="content-view" aria-labelledby="wizardTitle">
+      <div class="wizard-card">
+        <div class="wizard-header">
+          <div>
+            <h2 id="wizardTitle" style="margin-bottom:2px;">Service Wizard</h2>
+            <small style="color:var(--ink-soft)">Setu Sevak Online Application Portal</small>
+          </div>
+          <button class="btn-secondary" onclick="closeWizard()">✕ Cancel</button>
+        </div>
+
+        <div class="progress-tracker" role="progressbar" aria-valuemin="1" aria-valuemax="3" id="wizardProgressBar">
+          <div class="progress-step active" id="pstep-1"></div>
+          <div class="progress-step" id="pstep-2"></div>
+          <div class="progress-step" id="pstep-3"></div>
+        </div>
+
+        <!-- Wizard Step 1: Personal Details -->
+        <div id="wstep-1" class="wizard-step-content">
+          <h3 style="font-size:16px;">Step 1: Applicant Information</h3>
+          <label for="wizName" style="font-size:13px; font-weight:600;">Full Legal Name</label>
+          <input type="text" id="wizName" class="input-field" placeholder="Enter your full legal name" value="" />
+
+          <label for="wizMobile" style="font-size:13px; font-weight:600;">Mobile Number (OTP Linked)</label>
+          <input type="tel" id="wizMobile" class="input-field" placeholder="10-digit mobile number" value="" />
+
+          <label for="wizDocRef" style="font-size:13px; font-weight:600;">Linked Vault Document Reference</label>
+          <input type="text" id="wizDocRef" class="input-field" placeholder="Auto-filled or manual reference ID" value="" readonly style="background:#EAE6D8;" />
+        </div>
+
+        <!-- Wizard Step 2: Verification Documents -->
+        <div id="wstep-2" class="wizard-step-content" style="display:none;">
+          <h3 style="font-size:16px;">Step 2: Mandatory Required Documents</h3>
+          <p style="font-size:13px; color:var(--ink-soft); margin-bottom:16px;">
+            You must provide document numbers and upload valid files (Max 2MB: PDF, JPG, PNG) for <strong>ALL</strong> mandatory items listed below.
+          </p>
+
+          <div id="docUploadsContainer"></div>
+        </div>
+
+        <!-- Wizard Step 3: Review & Submission -->
+        <div id="wstep-3" class="wizard-step-content" style="display:none;">
+          <h3 style="font-size:16px;">Step 3: Review & Declaration</h3>
+          <div style="background:var(--paper); padding:16px; border-radius:var(--radius); border:1px solid var(--line);">
+            <p style="font-size:13px; margin:4px 0;"><strong>Service:</strong> <span id="summaryServiceTitle">Ration Card</span></p>
+            <p style="font-size:13px; margin:4px 0;"><strong>Applicant:</strong> <span id="summaryName"></span></p>
+            <p style="font-size:13px; margin:4px 0;"><strong>Mobile:</strong> <span id="summaryMobile"></span></p>
+            <p style="font-size:13px; margin:4px 0;"><strong>Mandatory Documents Uploaded:</strong> <span id="summaryDocCount" style="color:var(--green); font-weight:700;">0 Files Attached</span></p>
+            <p style="font-size:13px; margin:4px 0;"><strong>Application Fee:</strong> <span style="color:var(--green); font-weight:700;">₹ 0.00 (Government Funded)</span></p>
+          </div>
+          <label style="font-size:12px; display:flex; align-items:center; gap:8px; margin-top:16px; cursor:pointer;">
+            <input type="checkbox" id="declarationCheck" checked /> I declare that all documents attached are valid and information provided is accurate.
+          </label>
+        </div>
+
+        <!-- Wizard Step 4: Submission Confirmation -->
+        <div id="wstep-4" class="wizard-step-content" style="display:none; text-align:center; padding:20px 0;">
+          <span style="font-size:56px; display:block; margin-bottom:12px;" aria-hidden="true">🎉</span>
+          <h2>Application Submitted Successfully!</h2>
+          <p style="color:var(--ink-soft); font-size:14px;">Your Application Reference ID is: <strong id="appRefId" style="color:var(--navy-deep); font-family:monospace; font-size:16px;">SETU-2026-88391</strong></p>
+          <p style="font-size:13px; color:var(--ink-soft); margin-top:8px;">An SMS confirmation has been sent to your registered mobile number.</p>
+          <button class="btn-auth" style="margin-top:20px; width:auto; padding:10px 24px;" onclick="closeWizard()">Return to Dashboard</button>
+        </div>
+
+        <div class="wizard-actions" id="wizardActions">
+          <button class="btn-secondary" id="btnWizBack" onclick="navigateWizard(-1)" style="display:none;">← Back</button>
+          <button class="btn-auth" id="btnWizNext" onclick="navigateWizard(1)" style="width:auto; min-width:140px;">Next Step ➔</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>© 2026 Setu Sevak — Citizen Portal. High Security SSL Certified.</p>
+  </footer>
+
+</div>
+
+<script>
+  let currentStep = 1;
+  let activeServiceType = '';
+  let activeServiceTitle = '';
+  let currentTab = 'essential';
+  let speechUtterance = null;
+  let uploadedFilesState = {};
+  let currentUser = null;
+
+  const API_BASE_URL = "http://127.0.0.1:8000";
+
+  const requiredDocsMap = {
+    'ration': [
+      { id: 'id_proof', label: 'Identity Proof (Voter ID / Govt ID)', req: true },
+      { id: 'address_proof', label: 'Address Proof (Electricity Bill / Rent Agreement)', req: true },
+      { id: 'income_proof', label: 'Family Income Certificate', req: false }
+    ],
+    'identity': [
+      { id: 'id_proof', label: 'Existing ID Document Copy', req: true },
+      { id: 'address_proof', label: 'Updated Address Proof Document', req: true }
+    ],
+    'voter': [
+      { id: 'id_proof', label: 'Proof of Age / Birth Certificate', req: true },
+      { id: 'address_proof', label: 'Present Residence Proof', req: true }
+    ],
+    'utility': [
+      { id: 'ownership_proof', label: 'Property Ownership / Allotment Letter', req: true },
+      { id: 'id_proof', label: 'Applicant Identity Card', req: true }
+    ],
+    'farmer': [
+      { id: 'land_records', label: 'Land Ownership Passbook (Khatoni)', req: true },
+      { id: 'bank_passbook', label: 'Bank Account Passbook / Cancelled Cheque', req: true }
+    ],
+    'housing': [
+      { id: 'income_proof', label: 'Annual Income Proof', req: true },
+      { id: 'land_proof', label: 'Site Ownership Certificate', req: true }
+    ],
+    'pension': [
+      { id: 'age_proof', label: 'Age Verification Certificate', req: true },
+      { id: 'bank_passbook', label: 'Active Bank Passbook', req: true }
+    ],
+    'scholarship': [
+      { id: 'marksheet', label: 'Previous Academic Marksheet', req: true },
+      { id: 'caste_income', label: 'Income & Caste Certificate', req: true }
+    ],
+    'nsp': [
+      { id: 'aadhaar_bank', label: 'Aadhaar-Linked Bank Account Passbook', req: true },
+      { id: 'institution_id', label: 'Institution ID Card / Bonafide Certificate', req: true },
+      { id: 'marksheet', label: 'Previous Academic Marksheet', req: true },
+      { id: 'income_cert', label: 'Family Income Certificate', req: true }
+    ],
+    'vault': [
+      { id: 'vault_file', label: 'Document File (PDF / Image)', req: true }
+    ],
+    'income': [
+      { id: 'salary_slip', label: 'Employer Salary Slip / Revenue Affidavit', req: true },
+      { id: 'id_proof', label: 'Applicant Identity Card', req: true }
+    ],
+    'caste': [
+      { id: 'lineage_proof', label: 'Family Caste Proof / Father Caste Certificate', req: true },
+      { id: 'address_proof', label: 'State Residence Certificate', req: true }
+    ],
+    'domicile': [
+      { id: 'residence_proof', label: '10-Year Continuous Residence Proof', req: true },
+      { id: 'school_cert', label: 'Local School Leaving Certificate', req: true }
+    ]
+  };
+
+  // Indicative eligibility rules — simplified approximations of common scheme
+  // criteria for demo/screening purposes only. Always verify on the official portal.
+  const schemeRules = [
+    {
+      id: 'pmkisan', title: 'PM-KISAN Farmer Welfare Scheme', type: 'farmer', icon: '🌾',
+      description: 'Direct income support for landholding farmer families.',
+      check: (d) => d.land === 'yes' && d.landAcres > 0 && d.age >= 18
+    },
+    {
+      id: 'housing', title: 'PM Awas Yojana (Housing Subsidy)', type: 'housing', icon: '🏠',
+      description: 'Financial assistance for construction of a pucca house for low-income families.',
+      check: (d) => d.income > 0 && d.income <= 300000
+    },
+    {
+      id: 'pension_senior', title: 'National Old Age Pension', type: 'pension', icon: '👴',
+      description: 'Monthly pension support for senior citizens from low-income households.',
+      check: (d) => d.age >= 60 && d.income <= 300000
+    },
+    {
+      id: 'pension_widow', title: 'Widow Pension Scheme', type: 'pension', icon: '🕊️',
+      description: 'Monthly financial support for widowed women.',
+      check: (d) => d.widow === true
+    },
+    {
+      id: 'pension_disability', title: 'Disability Support Allowance', type: 'pension', icon: '♿',
+      description: 'Monthly allowance and assistive aids for persons with disabilities.',
+      check: (d) => d.disabled === true
+    },
+    {
+      id: 'scholarship', title: 'Pre/Post-Matric Scholarship', type: 'scholarship', icon: '🎓',
+      description: 'Financial support for school and college students from low-income families.',
+      check: (d) => d.occupation === 'student' && d.age <= 30 && d.income <= 250000
+    },
+    {
+      id: 'nsp', title: 'National Scholarship Portal (NSP) Scholarship', type: 'nsp', icon: '📚',
+      description: 'Unified central government portal covering pre-matric, post-matric, merit, and minority scholarships for all enrolled students.',
+      check: (d) => d.occupation === 'student'
+    },
+    {
+      id: 'ration_priority', title: 'Priority Household Ration Card', type: 'ration', icon: '🍚',
+      description: 'Subsidized food grains for households under the priority/BPL category.',
+      check: (d) => d.income > 0 && d.income <= 200000
+    },
+    {
+      id: 'ration_general', title: 'General (APL) Ration Card', type: 'ration', icon: '🍚',
+      description: 'Standard ration card for households above the priority income threshold.',
+      check: (d) => d.income > 200000
+    },
+    {
+      id: 'caste_cert', title: 'Caste Certificate & Reservation Benefits', type: 'caste', icon: '🏛️',
+      description: 'Certification enabling SC/ST/OBC reservation and quota benefits.',
+      check: (d) => d.category !== 'general'
+    },
+    {
+      id: 'voter', title: 'Voter ID Registration', type: 'voter', icon: '🗳️',
+      description: 'Register as a new voter — available to all citizens aged 18 and above.',
+      check: (d) => d.age >= 18
+    }
+  ];
+
+  function toggleLandAcres() {
+    const land = document.getElementById('eligLand').value;
+    document.getElementById('landAcresWrap').style.display = (land === 'yes') ? 'block' : 'none';
+  }
+
+  function showEligAlert(message) {
+    const alert = document.getElementById('eligAlert');
+    alert.className = 'alert-box alert-error';
+    alert.textContent = message;
+    alert.style.display = 'block';
+  }
+
+  function checkEligibility() {
+    const alert = document.getElementById('eligAlert');
+    alert.style.display = 'none';
+
+    const state = document.getElementById('eligState').value;
+    const age = parseInt(document.getElementById('eligAge').value, 10);
+    const income = parseFloat(document.getElementById('eligIncome').value);
+    const category = document.getElementById('eligCategory').value;
+    const land = document.getElementById('eligLand').value;
+    const landAcres = parseFloat(document.getElementById('eligLandAcres').value) || 0;
+    const occupation = document.getElementById('eligOccupation').value;
+    const widow = document.getElementById('eligWidow').checked;
+    const disabled = document.getElementById('eligDisabled').checked;
+
+    if (!state) { showEligAlert('Please select your state.'); return; }
+    if (isNaN(age) || age < 0 || age > 120) { showEligAlert('Please enter a valid age.'); return; }
+    if (isNaN(income) || income < 0) { showEligAlert('Please enter a valid annual family income.'); return; }
+
+    const d = { state, age, income, category, land, landAcres, occupation, widow, disabled };
+    const matches = schemeRules.filter(rule => rule.check(d));
+
+    renderEligibilityResults(matches, state);
+    speakAria(`${matches.length} eligible schemes found`);
+  }
+
+  function renderEligibilityResults(matches, state) {
+    const resultsWrap = document.getElementById('eligResultsWrap');
+    const noResults = document.getElementById('eligNoResults');
+    const grid = document.getElementById('eligResultsGrid');
+    grid.innerHTML = '';
+
+    if (matches.length === 0) {
+      resultsWrap.style.display = 'none';
+      noResults.style.display = 'block';
+      return;
+    }
+
+    noResults.style.display = 'none';
+    resultsWrap.style.display = 'block';
+
+    matches.forEach(rule => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-icon" aria-hidden="true">${rule.icon}</div>
+        <h3>${rule.title}</h3>
+        <p>${rule.description}</p>
+        <button class="btn-select" onclick="launchWizard('${rule.title.replace(/'/g, "\\'")}', '${rule.type}')">Start Application ➔</button>
+      `;
+      grid.appendChild(card);
+    });
+
+    resultsWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const splash = document.getElementById('splash-screen');
+      const mainApp = document.getElementById('main-app');
+      if (splash) splash.classList.add('fade-out');
+      if (mainApp) mainApp.classList.add('visible');
+    }, 2400);
+    refreshFingerprintButtonVisibility();
+  });
+
+  function toggleContrast() {
+    document.body.classList.toggle('high-contrast');
+    speakAria('High contrast mode toggled');
+  }
+
+  function adjustFontSize(delta) {
+    const root = document.documentElement;
+    const currentScale = parseFloat(getComputedStyle(root).getPropertyValue('--font-scale')) || 1;
+    const newScale = Math.min(Math.max(currentScale + (delta * 0.1), 0.8), 1.4);
+    root.style.setProperty('--font-scale', `${newScale}rem`);
+    speakAria(`Font size adjusted to ${Math.round(newScale * 100)} percent`);
+  }
+
+  function speakAria(message) {
+    const statusBox = document.getElementById('ariaStatus');
+    if (statusBox) statusBox.textContent = message;
+  }
+
+  const translations = {
+    en: {
+      essentialTab: "1. Essential Services (ज़रूरी सेवाएं)",
+      schemesTab: "2. Welfare Schemes (कल्याणकारी योजनाएं)",
+      vaultTab: "3. My Document Vault (दस्तावेज़ लॉक)",
+      certificatesTab: "4. Certificates (प्रमाणपत्र)",
+      guideTitle: "User Instruction Guide (उपयोगकर्ता निर्देश)",
+      guideButton: "OK, I Understand → Reveal All Options"
+    },
+    hi: {
+      essentialTab: "1. ज़रूरी सेवाएं",
+      schemesTab: "2. कल्याणकारी योजनाएं",
+      vaultTab: "3. दस्तावेज़ वॉल्ट",
+      certificatesTab: "4. प्रमाण पत्र",
+      guideTitle: "उपयोगकर्ता निर्देश निर्देशिका",
+      guideButton: "ठीक है, मैं समझ गया → सभी विकल्प दिखाएं"
+    },
+    bn: {
+      essentialTab: "১. জরুরি সেবা",
+      schemesTab: "২. কল্যাণমূলক প্রকল্প",
+      vaultTab: "৩. নথি ভল্ট",
+      certificatesTab: "৪. সার্টিফিকেট",
+      guideTitle: "ব্যবহারকারী নির্দেশিকা",
+      guideButton: "ঠিক আছে, আমি বুঝেছি → সব অপশন দেখুন"
+    }
+  };
+
+  function changeLanguage() {
+    const lang = document.getElementById('languageSelect').value;
+    const dict = translations[lang] || translations.en;
+    
+    document.getElementById('tab-essential').innerText = dict.essentialTab;
+    document.getElementById('tab-schemes').innerText = dict.schemesTab;
+    document.getElementById('tab-vault').innerText = dict.vaultTab;
+    document.getElementById('tab-certificates').innerText = dict.certificatesTab;
+    document.getElementById('guideTitle').innerText = dict.guideTitle;
+    
+    const okayBtn = document.querySelector('.btn-okay');
+    if (okayBtn) okayBtn.innerText = dict.guideButton;
+    speakAria(`Language changed to ${lang}`);
+  }
+
+  function showAuthAlert(message, isError = true) {
+    const alert = document.getElementById('authAlert');
+    alert.className = `alert-box ${isError ? 'alert-error' : 'alert-success'}`;
+    alert.textContent = message;
+    alert.style.display = 'block';
+  }
+
+  function switchAuthTab(tab) {
+    const btnLogin = document.getElementById('btnTabLogin');
+    const btnSignup = document.getElementById('btnTabSignup');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const forgotPanel = document.getElementById('forgotPinPanel');
+    const toggleBar = document.getElementById('authToggleBar');
+    document.getElementById('authAlert').style.display = 'none';
+
+    toggleBar.style.display = 'flex';
+    forgotPanel.style.display = 'none';
+
+    if (tab === 'login') {
+      btnLogin.classList.add('active');
+      btnSignup.classList.remove('active');
+      loginForm.style.display = 'block';
+      signupForm.style.display = 'none';
+      refreshFingerprintButtonVisibility();
+    } else {
+      btnSignup.classList.add('active');
+      btnLogin.classList.remove('active');
+      signupForm.style.display = 'block';
+      loginForm.style.display = 'none';
+    }
+  }
+
+  function showForgotPin() {
+    document.getElementById('authToggleBar').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('forgotPinPanel').style.display = 'block';
+    document.getElementById('forgotPinStep1').style.display = 'block';
+    document.getElementById('forgotPinStep2').style.display = 'none';
+    document.getElementById('authAlert').style.display = 'none';
+  }
+
+  function hideForgotPin() {
+    switchAuthTab('login');
+  }
+
+  async function fetchSecurityQuestion() {
+    const mobile = document.getElementById('forgotMobile').value.trim();
+    if (mobile.length < 10) {
+      showAuthAlert('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-pin/question`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile_number: mobile })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        showAuthAlert(data.detail || 'Could not find an account for this mobile number.');
+        return;
+      }
+
+      document.getElementById('forgotQuestionText').textContent = data.security_question;
+      document.getElementById('forgotPinStep1').style.display = 'none';
+      document.getElementById('forgotPinStep2').style.display = 'block';
+    } catch (err) {
+      showAuthAlert('Unable to connect to server. Ensure FastAPI is running.');
+    }
+  }
+
+  async function submitPinReset() {
+    const mobile = document.getElementById('forgotMobile').value.trim();
+    const answer = document.getElementById('forgotAnswer').value.trim();
+    const newPin = document.getElementById('forgotNewPin').value.trim();
+
+    if (!answer || !newPin) {
+      showAuthAlert('Please answer the security question and set a new PIN.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-pin/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile_number: mobile, security_answer: answer, new_password: newPin })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        showAuthAlert(data.detail || 'Could not reset your PIN. Please check your answer.');
+        return;
+      }
+
+      localStorage.setItem('access_token', data.access_token);
+      await fetchUserProfile(data.access_token);
+
+      switchAuthTab('login');
+      showAuthAlert('PIN reset successful! You are now logged in.', false);
+      setTimeout(unlockPortalToGuide, 800);
+    } catch (err) {
+      showAuthAlert('Unable to connect to server. Ensure FastAPI is running.');
+    }
+  }
+
+  // ---- Fingerprint / WebAuthn biometric login ----
+  // NOTE: this triggers the browser's real platform authenticator prompt
+  // (fingerprint / Face ID) for user experience, but the backend verification
+  // is intentionally simplified to match this demo's mock-token security
+  // model. WebAuthn requires a secure context — it will not work if this page
+  // is opened directly as a file:// page; serve it via http://localhost or
+  // https:// instead.
+  function webAuthnSupported() {
+    return !!(window.PublicKeyCredential && navigator.credentials);
+  }
+
+  function refreshFingerprintButtonVisibility() {
+    const btn = document.getElementById('btnFingerprintLogin');
+    const savedMobile = localStorage.getItem('fingerprintMobile');
+    btn.style.display = (savedMobile && webAuthnSupported()) ? 'block' : 'none';
+  }
+
+  async function enrollFingerprint(mobile, pin) {
+    if (!webAuthnSupported()) {
+      showAuthAlert('Fingerprint login needs a supported browser served over localhost or https. Skipping biometric setup — you can still log in with your PIN.', false);
+      return;
+    }
+    try {
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+      await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: 'Setu Sevak Citizen Portal' },
+          user: {
+            id: new TextEncoder().encode(mobile),
+            name: mobile,
+            displayName: mobile
+          },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+          authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+          timeout: 60000
+        }
+      });
+
+      const response = await fetch(`${API_BASE_URL}/auth/fingerprint/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile_number: mobile, password: pin })
+      });
+
+      if (response.ok) {
+        localStorage.setItem('fingerprintMobile', mobile);
+        showAuthAlert('Fingerprint login enabled for this device!', false);
+      }
+    } catch (err) {
+      console.error('Fingerprint enrollment failed or was cancelled:', err);
+      showAuthAlert('Fingerprint setup was cancelled or not supported on this device. You can still log in with your PIN.', false);
+    }
+  }
+
+  async function handleFingerprintLogin() {
+    const mobile = localStorage.getItem('fingerprintMobile');
+    if (!mobile || !webAuthnSupported()) {
+      showAuthAlert('Fingerprint login is not set up on this device yet. Sign up or log in with your PIN first, then enable it from the signup screen.');
+      return;
+    }
+
+    try {
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+      await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          userVerification: 'required',
+          timeout: 60000
+        }
+      });
+
+      const response = await fetch(`${API_BASE_URL}/auth/fingerprint/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile_number: mobile })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        showAuthAlert(data.detail || 'Fingerprint login failed. Please use your PIN instead.');
+        return;
+      }
+
+      localStorage.setItem('access_token', data.access_token);
+      await fetchUserProfile(data.access_token);
+
+      showAuthAlert('Fingerprint verified — login successful!', false);
+      setTimeout(unlockPortalToGuide, 600);
+    } catch (err) {
+      console.error('Fingerprint authentication failed or was cancelled:', err);
+      showAuthAlert('Fingerprint authentication was cancelled or failed. Please use your PIN instead.');
+    }
+  }
+
+  async function handleLogin() {
+    const mobile = document.getElementById('loginMobile').value.trim();
+    const pin = document.getElementById('loginPasskey').value.trim();
+
+    if (mobile.length < 10 || !pin) {
+      showAuthAlert('Please fill in a valid 10-digit mobile number and PIN.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login-mobile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile_number: mobile, password: pin })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showAuthAlert(data.detail || 'Login failed. Please check credentials.');
+        return;
+      }
+
+      localStorage.setItem('access_token', data.access_token);
+      await fetchUserProfile(data.access_token);
+
+      showAuthAlert("Login successful!", false);
+      setTimeout(unlockPortalToGuide, 600);
+    } catch (err) {
+      showAuthAlert('Unable to connect to server. Ensure FastAPI is running.');
+    }
+  }
+
+  async function handleSignup() {
+    const name = document.getElementById('signupName').value.trim();
+    const mobile = document.getElementById('signupMobile').value.trim();
+    const pin = document.getElementById('signupPasskey').value.trim();
+    const securityQuestion = document.getElementById('signupSecurityQuestion').value;
+    const securityAnswer = document.getElementById('signupSecurityAnswer').value.trim();
+    const wantsFingerprint = document.getElementById('signupEnableFingerprint').checked;
+
+    if (!name || mobile.length < 10 || !pin) {
+      showAuthAlert('Please fill in all details correctly.');
+      return;
+    }
+    if (!securityQuestion || !securityAnswer) {
+      showAuthAlert('Please choose a security question and provide an answer — this is used to recover your PIN if forgotten.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mobile_number: mobile,
+          password: pin,
+          full_name: name,
+          security_question: securityQuestion,
+          security_answer: securityAnswer
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showAuthAlert(data.detail || 'Registration failed.');
+        return;
+      }
+
+      const loginResponse = await fetch(`${API_BASE_URL}/auth/login-mobile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile_number: mobile, password: pin })
+      });
+
+      const loginData = await loginResponse.json();
+      if (loginResponse.ok) {
+        localStorage.setItem('access_token', loginData.access_token);
+        currentUser = { name: data.full_name, mobile: data.mobile_number };
+        document.getElementById('wizName').value = data.full_name || "";
+        document.getElementById('wizMobile').value = data.mobile_number;
+      }
+
+      if (wantsFingerprint) {
+        await enrollFingerprint(mobile, pin);
+      }
+
+      showAuthAlert("Account created successfully!", false);
+      setTimeout(unlockPortalToGuide, 600);
+    } catch (err) {
+      showAuthAlert('Unable to connect to server. Ensure FastAPI is running.');
+    }
+  }
+
+  async function fetchUserProfile(token) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        currentUser = { name: userData.full_name, mobile: userData.mobile_number };
+        document.getElementById('wizName').value = userData.full_name || "";
+        document.getElementById('wizMobile').value = userData.mobile_number;
+      }
+    } catch (err) {
+      console.error("Failed to retrieve profile:", err);
+    }
+  }
+
+  function unlockPortalToGuide() {
+    document.getElementById('view-auth').classList.remove('active');
+    document.getElementById('view-instructions').classList.add('active');
+    speakAria('Portal unlocked. Instruction guide loaded.');
+  }
+
+  function readInstructions() {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const text = document.getElementById('guideBody').innerText;
+      speechUtterance = new SpeechSynthesisUtterance(text);
+      speechUtterance.rate = 0.95;
+      
+      const status = document.getElementById('voiceStatus');
+      status.textContent = "🔊 Reading Guide Aloud...";
+      
+      speechUtterance.onend = () => { status.textContent = "🔊 Audio Voice Reader Ready"; };
+      speechUtterance.onerror = () => { status.textContent = "🔊 Audio Reader Error"; };
+      
+      window.speechSynthesis.speak(speechUtterance);
+    } else {
+      alert("Text-to-speech is not supported on this browser.");
+    }
+  }
+
+  function stopAudio() {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      document.getElementById('voiceStatus').textContent = "🔊 Audio Voice Reader Stopped";
+    }
+  }
+
+  function confirmInstructions() {
+    stopAudio();
+    document.getElementById('view-instructions').classList.remove('active');
+    
+    const menuBar = document.getElementById('menuBar');
+    menuBar.classList.add('visible');
+    
+    const tabs = document.querySelectorAll('.menu-tab');
+    tabs.forEach((tab, index) => {
+      setTimeout(() => {
+        tab.classList.add('appear');
+      }, index * 120);
+    });
+
+    switchTab('essential', document.getElementById('tab-essential'));
+    speakAria('Instructions acknowledged. All menu options revealed.');
+  }
+
+  function switchTab(tabId, el) {
+    currentTab = tabId;
+    
+    document.querySelectorAll('.content-view').forEach(view => {
+      if (view.id !== 'view-wizard') view.classList.remove('active');
+    });
+
+    document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    const target = document.getElementById(`view-${tabId}`);
+    if (target) target.classList.add('active');
+    
+    speakAria(`Switched to ${tabId} tab`);
+  }
+
+  function launchWizard(title, type) {
+    activeServiceTitle = title;
+    activeServiceType = type;
+    uploadedFilesState = {};
+
+    document.getElementById('wizardTitle').textContent = title;
+    renderDocUploadInputs(type);
+
+    document.querySelectorAll('.content-view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-wizard').classList.add('active');
+
+    currentStep = 1;
+    updateWizardUI();
+    speakAria(`Started application wizard for ${title}`);
+  }
+
+  function closeWizard() {
+    document.getElementById('view-wizard').classList.remove('active');
+    switchTab(currentTab, document.getElementById(`tab-${currentTab}`));
+  }
+
+  function renderDocUploadInputs(type) {
+    const container = document.getElementById('docUploadsContainer');
+    container.innerHTML = '';
+
+    const docs = requiredDocsMap[type] || [
+      { id: 'gen_doc', label: 'Primary Supporting Identification Document', req: true }
+    ];
+
+    docs.forEach(doc => {
+      const item = document.createElement('div');
+      item.className = 'doc-upload-item';
+      item.innerHTML = `
+        <h4>${doc.label} ${doc.req ? '<span class="req-tag">*Mandatory</span>' : ''}</h4>
+        
+        <label for="num_${doc.id}" style="font-size:12px; font-weight:600;">Document Certificate / Registration Number</label>
+        <input type="text" id="num_${doc.id}" class="input-field" style="margin-bottom:8px;" placeholder="e.g. DOC-99102381" />
+
+        <label for="file_${doc.id}" style="font-size:12px; font-weight:600; display:block;">Upload Scanned File (PDF/JPG)</label>
+        <input type="file" id="file_${doc.id}" accept="image/*,.pdf" onchange="handleFileUpload(event, '${doc.id}')" style="font-size:13px;" />
+
+        <div class="upload-progress-container" id="pbar_wrap_${doc.id}">
+          <div class="upload-progress-bar" id="pbar_${doc.id}"></div>
+        </div>
+        <img id="thumb_${doc.id}" class="preview-thumb" alt="Document thumbnail preview" />
+        <span id="status_${doc.id}" style="font-size:12px; display:block; margin-top:4px; font-weight:600;"></span>
+      `;
+      container.appendChild(item);
+    });
+  }
+
+  function resizeImageToUnder2MB(file) {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/') || file.size <= 2 * 1024 * 1024) {
+        resolve(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          let quality = 0.85;
+
+          const maxDimension = 1920;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          function compress() {
+            canvas.toBlob((blob) => {
+              if (blob.size <= 2 * 1024 * 1024 || quality <= 0.2) {
+                const resizedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                });
+                resolve(resizedFile);
+              } else {
+                quality -= 0.15;
+                compress();
+              }
+            }, 'image/jpeg', quality);
+          }
+          compress();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFileUpload(event, docId) {
+    const originalFile = event.target.files[0];
+    if (!originalFile) return;
+
+    const pbarWrap = document.getElementById(`pbar_wrap_${docId}`);
+    const pbar = document.getElementById(`pbar_${docId}`);
+    const statusText = document.getElementById(`status_${docId}`);
+    const thumb = document.getElementById(`thumb_${docId}`);
+
+    pbarWrap.style.display = 'block';
+    pbar.style.width = '0%';
+    statusText.style.color = 'var(--ink-soft)';
+    statusText.textContent = originalFile.size > 2 * 1024 * 1024 ? 'Resizing file under 2MB...' : 'Uploading document...';
+
+    const file = await resizeImageToUnder2MB(originalFile);
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 25;
+      pbar.style.width = `${progress}%`;
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        uploadedFilesState[docId] = file.name;
+        statusText.style.color = 'var(--green)';
+        statusText.textContent = `✓ Uploaded: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            thumb.src = e.target.result;
+            thumb.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        } else {
+          thumb.style.display = 'none';
+        }
+      }
+    }, 150);
+  }
+
+  function navigateWizard(delta) {
+    if (delta === 1 && !validateCurrentStep()) return;
+
+    currentStep += delta;
+    if (currentStep > 4) currentStep = 4;
+    if (currentStep < 1) currentStep = 1;
+
+    updateWizardUI();
+  }
+
+  function validateCurrentStep() {
+    if (currentStep === 1) {
+      const name = document.getElementById('wizName').value.trim();
+      const mobile = document.getElementById('wizMobile').value.trim();
+      if (!name || mobile.length < 10) {
+        alert("Please enter a valid full name and 10-digit mobile number.");
+        return false;
+      }
+    } else if (currentStep === 2) {
+      const docs = requiredDocsMap[activeServiceType] || [{ id: 'gen_doc', req: true }];
+      for (let doc of docs) {
+        if (doc.req) {
+          const numVal = document.getElementById(`num_${doc.id}`)?.value.trim();
+          const hasFile = uploadedFilesState[doc.id];
+          if (!numVal || !hasFile) {
+            alert(`Please provide both Document Number and Scanned File for mandatory item: ${doc.label}`);
+            return false;
+          }
+        }
+      }
+    } else if (currentStep === 3) {
+      const dec = document.getElementById('declarationCheck').checked;
+      if (!dec) {
+        alert("You must check the declaration before submitting.");
+        return false;
+      }
+      document.getElementById('appRefId').textContent = `SETU-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+    }
+    return true;
+  }
+
+  function updateWizardUI() {
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById(`wstep-${i}`);
+      if (el) el.style.display = (i === currentStep) ? 'block' : 'none';
+    }
+
+    for (let i = 1; i <= 3; i++) {
+      const pstep = document.getElementById(`pstep-${i}`);
+      if (pstep) {
+        if (i <= currentStep) pstep.classList.add('active');
+        else pstep.classList.remove('active');
+      }
+    }
+
+    if (currentStep === 3) {
+      document.getElementById('summaryServiceTitle').textContent = activeServiceTitle;
+      document.getElementById('summaryName').textContent = document.getElementById('wizName').value;
+      document.getElementById('summaryMobile').textContent = document.getElementById('wizMobile').value;
+      document.getElementById('summaryDocCount').textContent = `${Object.keys(uploadedFilesState).length} File(s) Validated`;
+    }
+
+    const btnBack = document.getElementById('btnWizBack');
+    const btnNext = document.getElementById('btnWizNext');
+    const actions = document.getElementById('wizardActions');
+
+    if (currentStep === 4) {
+      actions.style.display = 'none';
+    } else {
+      actions.style.display = 'flex';
+      btnBack.style.display = (currentStep === 1) ? 'none' : 'inline-block';
+      btnNext.textContent = (currentStep === 3) ? 'Confirm & Submit Application 🚀' : 'Next Step ➔';
+    }
+
+    speakAria(`Wizard step ${currentStep} of 3`);
+  }
+
+  function autoFillVault(docName, docId, targetService) {
+    document.getElementById('wizDocRef').value = `${docName} (${docId})`;
+    launchWizard(`Application with Auto-filled ${docName}`, targetService);
+    speakAria(`Auto-filled details from ${docName}`);
+  }
+</script>
+
+</body>
+</html>
